@@ -76,7 +76,15 @@
         preferredRenderer: "webgl2",
         maxExecutionDuration: 60,
         playerVersion: 32,
-        compatibilityRules: false
+        compatibilityRules: false,
+        // Original fonts referenced by content_mi/schedule.swf and others.
+        // Ruffle reads TTFs directly and registers them by their internal name.
+        fontSources: [
+          "fonts/JointbyPizzaDude.ttf",
+          "fonts/ALBA____.TTF",
+          "fonts/ALBAM___.TTF",
+          "fonts/ALBAS___.TTF"
+        ]
       };
 
       // Pause Ruffle when the tab loses focus to save CPU.
