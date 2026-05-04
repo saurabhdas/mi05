@@ -230,25 +230,6 @@
       #blob-container:hover #section-close { opacity: .7; }
       #section-close:hover { opacity: 1 !important; background: rgba(0,0,0,.7); }
 
-      /* schedule.swf has prev/next-day buttons whose glyphs come from custom
-         fonts ("Alba", "Joint by PizzaDude") that aren't embedded — so they
-         render invisible. Decorative HTML arrows show the user where to click;
-         pointer-events:none lets the underlying SWF button still receive the
-         click. Only visible when the schedule SWF is loaded in the host. */
-      .day-arrow {
-        position: absolute;
-        top: 28px;
-        z-index: 8;
-        font: 28px/1 "Lucida Grande", Arial, sans-serif;
-        color: #0099ff;
-        opacity: 0.9;
-        pointer-events: none;
-        text-shadow: 0 0 1px rgba(0,153,255,.4);
-        display: none;
-      }
-      #section-host.schedule .day-arrow { display: block; }
-      #section-host .day-prev { left: 165px; }
-      #section-host .day-next { right: 165px; }
     </style>
 </head>
 <body bgcolor="#4499EE">
@@ -273,10 +254,7 @@
       <a data-src="content_mi/mi0.swf" title="Mood Indigo"></a>
     </nav>
 
-    <div id="section-host" aria-live="polite">
-      <span class="day-arrow day-prev" aria-hidden="true">&#9664;</span>
-      <span class="day-arrow day-next" aria-hidden="true">&#9654;</span>
-    </div>
+    <div id="section-host" aria-live="polite"></div>
     <button id="section-close" type="button" aria-label="Back to mascot">×</button>
 </div>
 
