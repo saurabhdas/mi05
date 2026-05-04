@@ -1,3 +1,4 @@
 # Local dev/test artifacts — kept out of the repo
 dev/
+temp/
 .DS_Store
