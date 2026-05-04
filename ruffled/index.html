@@ -12,6 +12,10 @@
           get: () => 1, configurable: true
         });
       } catch (e) {}
+      // Register the SW that rewrites the schedule SWF's POST to GET.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      }
     </script>
     <script src="ruffle/ruffle.js"></script>
     <script>
