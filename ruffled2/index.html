@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <title>Mood Indigo 2005: Dive In!</title>
+    <link rel="stylesheet" href="main.css" type="text/css" />
+
+    <script>
+      // Run BEFORE ruffle.js — clamp devicePixelRatio so the canvas
+      // backing store doesn't get the 2x Retina blowup (4x pixel cost).
+      try {
+        Object.defineProperty(window, 'devicePixelRatio', {
+          get: () => 1, configurable: true
+        });
+      } catch (e) {}
+
+      // The schedule SWF (content_mi/schedule.swf) was authored against a 2005
+      // Apache box and POSTs to content_mi/day{1..4}.php to fetch its data.
+      // Static origins (GitHub Pages) reject POST. Patch fetch + XHR so any
+      // POST to day*.php silently becomes a GET. Must run before ruffle.js
+      // loads since Ruffle picks up window.fetch / XHR refs.
+      (function () {
+        const isDayPhp = url => {
+          try { return /\/day\d\.php(\?|$)/.test(new URL(url, location.href).pathname); }
+          catch { return false; }
+        };
+        const origFetch = window.fetch.bind(window);
+        window.fetch = function (input, init) {
+          const url = typeof input === 'string' ? input : input?.url;
+          const method = (init?.method || (input && input.method) || 'GET').toUpperCase();
+          if (method === 'POST' && url && isDayPhp(url)) {
+            return origFetch(url, { method: 'GET', cache: 'no-store' });
+          }
+          return origFetch(input, init);
+        };
+        const XHR = window.XMLHttpRequest;
+        const origOpen = XHR.prototype.open;
+        const origSend = XHR.prototype.send;
+        XHR.prototype.open = function (method, url, ...rest) {
+          if ((method || '').toUpperCase() === 'POST' && isDayPhp(url)) {
+            this.__rewroteToGet = true;
+            return origOpen.call(this, 'GET', url, ...rest);
+          }
+          return origOpen.call(this, method, url, ...rest);
+        };
+        XHR.prototype.send = function (body) {
+          if (this.__rewroteToGet) return origSend.call(this);
+          return origSend.call(this, body);
+        };
+      })();
+    </script>
+
+    <script src="ruffle/ruffle.js"></script>
+    <script>
+      window.RufflePlayer = window.RufflePlayer || {};
+      window.RufflePlayer.config = {
+        autoplay: "on",
+        unmuteOverlay: "hidden",
+        contextMenu: "off",
+        backgroundColor: "#4499EE",
+        polyfills: true,
+        publicPath: "ruffle/",
+        warnOnUnsupportedContent: false,
+        splashScreen: false,
+        wmode: "direct",
+        quality: "low",
+        letterbox: "off",
+        preferredRenderer: "webgl2",
+        maxExecutionDuration: 60,
+        playerVersion: 32,
+        compatibilityRules: false,
+        // Bundled fonts so any text field that asks for these by name picks
+        // them up. Ruffle reads TTF/OTF directly and registers under the
+        // font's internal name.
+        fontSources: [
+          "fonts/JointbyPizzaDude.ttf",
+          "fonts/ALBA____.TTF",
+          "fonts/ALBAM___.TTF",
+          "fonts/ALBAS___.TTF"
+        ],
+        // Useful while iterating on the SWF-internal click bug — exposes
+        // Ruffle's ActionScript trace() output and AVM1 warnings.
+        logLevel: "debug"
+      };
+    </script>
+    <script type="text/javascript" src="main.js"></script>
+
+<style type="text/css">
+html, body { margin:0; padding:0; background:#4499EE; }
+a:link, a:visited, a:hover, a:active { text-decoration: none; }
+</style>
+</head>
+
+<!--
+  Layout matches the original index.php exactly: a single Flash embed, full
+  page width, 840px tall, content bottom-aligned, no scaling. blob_big.swf is
+  expected to handle its own click navigation via loadMovieNum(level, url),
+  which stacks each section SWF on a higher level above the main movie.
+-->
+<body bgcolor="#4499EE">
+<div>
+    <object id="blob0" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0" height="840" width="100%">
+    <param name="movie" value="blob_big.swf">
+    <param name="bgcolor" value="#4499EE">
+    <param name="quality" value="high">
+    <param name="menu" value="false">
+    <param name="scale" value="noscale">
+    <param name="salign" value="b">
+    <param name="flashvars" value="">
+    <embed name="blob0" src="blob_big.swf" bgcolor="#4499EE" quality="high" menu="false" scale="noscale" salign="b" flashvars="" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer/" height="840" width="100%">
+    </object>
+</div>
+</body>
+</html>
