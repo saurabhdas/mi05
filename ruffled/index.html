@@ -181,17 +181,20 @@
       /* Each nav target is independently positioned over its icon (drawn by
          blob_big.swf). 5 icons in the top-right strip + the "Mood indigo" title
          text on the upper-left as the 6th target. */
+      /* Overlay and links are pointer-events:none so all hover/mousemove events
+         pass through to the SWF underneath — preserves the original SWF's
+         hover-to-color animation on the icons and "Mood indigo" title.
+         Clicks are captured at document level (see script below) and routed to
+         the matching link's data-src for section loading. */
       #nav-overlay { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
       #nav-overlay a {
         position: absolute;
         cursor: pointer;
-        pointer-events: auto;
+        pointer-events: none;
         background: transparent;
-        border-radius: 4px;
         width: 50px; height: 50px;
         top: 60px;
       }
-      #nav-overlay a:hover { background: rgba(255,255,255,.22); }
       #nav-overlay a[data-src="content_c/c0.swf"]  { left: 435px; } /* martini  */
       #nav-overlay a[data-src="content_h/h0.swf"]  { left: 490px; } /* masks    */
       #nav-overlay a[data-src="content_i/i0.swf"]  { left: 540px; } /* kite     */
@@ -283,12 +286,21 @@
     host.appendChild(embed);
     host.classList.add('active');
   }
-  document.querySelectorAll('#nav-overlay a').forEach(a => {
-    a.addEventListener('click', e => {
-      e.preventDefault();
-      loadSection(a.dataset.src);
-    });
-  });
+  // Capture-phase click listener routes clicks over icon regions to loadSection.
+  // The links themselves are pointer-events:none so the SWF underneath gets all
+  // hover events (preserving its color-on-hover animation).
+  document.addEventListener('click', e => {
+    for (const a of document.querySelectorAll('#nav-overlay a')) {
+      const r = a.getBoundingClientRect();
+      if (e.clientX >= r.left && e.clientX <= r.right &&
+          e.clientY >= r.top && e.clientY <= r.bottom) {
+        e.stopPropagation();
+        e.preventDefault();
+        loadSection(a.dataset.src);
+        return;
+      }
+    }
+  }, true /* capture */);
   // The mascot splash (mi0.swf) was the default landing content of the original site.
   close.addEventListener('click', () => loadSection('content_mi/mi0.swf'));
   loadSection('content_mi/mi0.swf');
