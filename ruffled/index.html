@@ -12,10 +12,41 @@
           get: () => 1, configurable: true
         });
       } catch (e) {}
-      // Register the SW that rewrites the schedule SWF's POST to GET.
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
-      }
+
+      // The schedule SWF (content_mi/schedule.swf) was authored against a 2005
+      // Apache box and POSTs to content_mi/day{1..4}.php to fetch its data.
+      // Static origins (GitHub Pages, python http.server) reject POST. Patch
+      // fetch + XHR so any POST to day*.php silently becomes a GET. Must run
+      // before ruffle.js loads since Ruffle picks up window.fetch/XHR refs.
+      (function () {
+        const isDayPhp = url => {
+          try { return /\/day\d\.php(\?|$)/.test(new URL(url, location.href).pathname); }
+          catch { return false; }
+        };
+        const origFetch = window.fetch.bind(window);
+        window.fetch = function (input, init) {
+          const url = typeof input === 'string' ? input : input?.url;
+          const method = (init?.method || (input && input.method) || 'GET').toUpperCase();
+          if (method === 'POST' && url && isDayPhp(url)) {
+            return origFetch(url, { method: 'GET', cache: 'no-store' });
+          }
+          return origFetch(input, init);
+        };
+        const XHR = window.XMLHttpRequest;
+        const origOpen = XHR.prototype.open;
+        const origSend = XHR.prototype.send;
+        XHR.prototype.open = function (method, url, ...rest) {
+          if ((method || '').toUpperCase() === 'POST' && isDayPhp(url)) {
+            this.__rewroteToGet = true;
+            return origOpen.call(this, 'GET', url, ...rest);
+          }
+          return origOpen.call(this, method, url, ...rest);
+        };
+        XHR.prototype.send = function (body) {
+          if (this.__rewroteToGet) return origSend.call(this);
+          return origSend.call(this, body);
+        };
+      })();
     </script>
     <script src="ruffle/ruffle.js"></script>
     <script>
