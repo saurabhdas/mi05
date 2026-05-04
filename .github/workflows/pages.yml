@@ -1,4 +1,4 @@
-name: Deploy ruffled2/ to GitHub Pages
+name: Deploy ruffled/ to GitHub Pages
 
 on:
   push:
@@ -25,6 +25,6 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ./ruffled2
+          path: ./ruffled
       - id: deployment
         uses: actions/deploy-pages@v4
