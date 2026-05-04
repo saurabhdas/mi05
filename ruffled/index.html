@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <title>Mood Indigo 2005: Dive In!</title>
+    <link rel="stylesheet" href="main.css" type="text/css" />
+    <script>
+      // Run BEFORE ruffle.js — clamp devicePixelRatio so Ruffle's canvas
+      // backing store doesn't get the 2x Retina blowup (4x pixel cost).
+      try {
+        Object.defineProperty(window, 'devicePixelRatio', {
+          get: () => 1, configurable: true
+        });
+      } catch (e) {}
+    </script>
+    <script src="ruffle/ruffle.js"></script>
+    <script>
+      window.RufflePlayer = window.RufflePlayer || {};
+      window.RufflePlayer.config = {
+        autoplay: "on",
+        unmuteOverlay: "hidden",
+        contextMenu: "off",
+        backgroundColor: "#4499EE",
+        polyfills: true,
+        publicPath: "ruffle/",
+        warnOnUnsupportedContent: false,
+        splashScreen: false,
+        wmode: "direct",
+        quality: "low",
+        letterbox: "off",
+        preferredRenderer: "webgl2",
+        maxExecutionDuration: 60,
+        playerVersion: 32,
+        compatibilityRules: false
+      };
+
+      // Pause Ruffle when the tab loses focus to save CPU.
+      document.addEventListener('visibilitychange', () => {
+        const p = document.querySelector('ruffle-embed, ruffle-object');
+        if (!p || !p.pause || !p.play) return;
+        if (document.hidden) p.pause(); else p.play();
+      });
+
+      // Renderer diagnostic — inspects Ruffle's <canvas> inside its shadow DOM
+      // and reports which context it ended up with. The element shows up as a
+      // small black overlay in the upper-left so you can see it without devtools.
+      function rendererInfo() {
+        const p = document.querySelector('ruffle-embed, ruffle-object, ruffle-player');
+        if (!p || !p.shadowRoot) return null;
+        const c = p.shadowRoot.querySelector('canvas');
+        if (!c) return null;
+        const result = { canvas: c.tagName, width: c.width, height: c.height, contexts: [] };
+        for (const t of ['webgl2', 'webgl', 'webgpu', '2d']) {
+          try { if (c.getContext(t)) result.contexts.push(t); } catch(e) {}
+        }
+        const gl = c.getContext('webgl2') || c.getContext('webgl');
+        if (gl) {
+          const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+          result.glRenderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : '(masked)';
+          result.glVendor   = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL)   : '(masked)';
+          result.glVersion  = gl.getParameter(gl.VERSION);
+        }
+        return result;
+      }
+      window.addEventListener('load', () => {
+        const box = document.createElement('div');
+        box.id = 'ruffle-diag';
+        box.style.cssText = 'position:fixed;top:8px;left:8px;background:rgba(0,0,0,.78);color:#0f0;font:12px/1.4 monospace;padding:8px 10px;border-radius:6px;z-index:99999;max-width:540px;white-space:pre-wrap;pointer-events:auto;';
+        box.textContent = 'Ruffle: starting…';
+        document.body.appendChild(box);
+
+        // FPS sampler — paints the page each rAF tick and reports rolling avg.
+        let frames = 0, fpsLast = performance.now(), fps = 0;
+        (function tick() {
+          frames++;
+          const now = performance.now();
+          if (now - fpsLast >= 500) {
+            fps = (frames * 1000 / (now - fpsLast)) | 0;
+            frames = 0; fpsLast = now;
+          }
+          requestAnimationFrame(tick);
+        })();
+
+        let baseInfo = '';
+        const update = () => {
+          const info = rendererInfo();
+          if (info && !baseInfo) {
+            const live = info.contexts.includes('webgl2') ? 'WebGL2'
+                       : info.contexts.includes('webgl')  ? 'WebGL1'
+                       : info.contexts.includes('webgpu') ? 'WebGPU'
+                       : info.contexts.includes('2d')     ? 'Canvas2D (software)'
+                       : '?';
+            baseInfo =
+              'Ruffle renderer: ' + live + '\n' +
+              'GL: ' + (info.glVersion || '-') + '\n' +
+              'GPU: ' + (info.glRenderer || '-') + '\n' +
+              'Vendor: ' + (info.glVendor || '-') + '\n' +
+              'Canvas: ' + info.width + 'x' + info.height + '\n';
+          }
+          box.textContent = (baseInfo || 'Ruffle: waiting for player…\n') + 'Page FPS: ' + fps;
+        };
+        setInterval(update, 250);
+        box.addEventListener('dblclick', () => box.remove());
+      });
+    </script>
+    <script type="text/javascript" src="main.js"></script>
+    <style type="text/css">
+      html, body { margin:0; padding:0; background:#4499EE; }
+      a:link, a:visited, a:hover, a:active { text-decoration: none; }
+      /* Constrain the player to the SWF's native width (800px) plus a bit of
+         breathing room. The page bg (#4499EE) already matches the SWF stage
+         color so the left/right gutter is visually seamless. Big perf win:
+         the canvas only paints the area the bubble actually occupies. */
+      #blob-container {
+        position: relative;
+        width: 880px;
+        max-width: 100vw;
+        height: 100vh;
+        margin: 0 auto;
+      }
+      #blob-container ruffle-player, #blob-container ruffle-embed, #blob-container embed, #blob-container object {
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+      }
+      /* Invisible click targets aligned with the icon strip drawn by blob_big.swf
+         (top-right of the blob frame). Each loads a section into the central area. */
+      /* Each nav target is independently positioned over its icon (drawn by
+         blob_big.swf). 5 icons in the top-right strip + the "Mood indigo" title
+         text on the upper-left as the 6th target. */
+      #nav-overlay { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+      #nav-overlay a {
+        position: absolute;
+        cursor: pointer;
+        pointer-events: auto;
+        background: transparent;
+        border-radius: 4px;
+        width: 50px; height: 50px;
+        top: 60px;
+      }
+      #nav-overlay a:hover { background: rgba(255,255,255,.22); }
+      #nav-overlay a[data-src="content_c/c0.swf"]  { left: 435px; } /* martini  */
+      #nav-overlay a[data-src="content_h/h0.swf"]  { left: 490px; } /* masks    */
+      #nav-overlay a[data-src="content_i/i0.swf"]  { left: 540px; } /* kite     */
+      #nav-overlay a[data-src="content_p/p0.swf"]  { left: 595px; } /* lute (Pronites) */
+      #nav-overlay a[data-src="content_o/o0.swf"]  { left: 650px; } /* ttt  (Online)   */
+      #nav-overlay a[data-src="content_mi/mi0.swf"] {
+        top: 78px; left: 145px; width: 160px; height: 28px;
+      } /* "Mood indigo" title text */
+      /* Central area where loaded section SWF lives. Section SWFs are natively
+         600x600, so we render them at native size centered inside the blob's
+         interior. Keeps aspect ratio and matches the original layout. */
+      #section-host {
+        position: absolute;
+        left: 50%;
+        top: 130px;
+        transform: translateX(-50%);
+        width: 600px;
+        height: 600px;
+        z-index: 5;
+        background: transparent;
+        display: none;
+      }
+      #section-host.active { display: block; }
+      #section-host ruffle-player, #section-host ruffle-embed, #section-host embed {
+        width: 600px !important;
+        height: 600px !important;
+        display: block;
+      }
+      #section-close {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        z-index: 20;
+        font: 16px/1 sans-serif;
+        background: rgba(0,0,0,.4);
+        color: #fff;
+        border: 0;
+        padding: 4px 9px;
+        border-radius: 50%;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity .15s;
+      }
+      #blob-container:hover #section-close { opacity: .7; }
+      #section-close:hover { opacity: 1 !important; background: rgba(0,0,0,.7); }
+    </style>
+</head>
+<body bgcolor="#4499EE">
+<div id="blob-container">
+    <object id="blob0" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0" height="840" width="100%">
+    <param name="movie" value="blob_big.swf">
+    <param name="bgcolor" value="#4499EE">
+    <param name="quality" value="high">
+    <param name="menu" value="false">
+    <param name="scale" value="noscale">
+    <param name="salign" value="b">
+    <param name="flashvars" value="">
+    <embed name="blob0" src="blob_big.swf" bgcolor="#4499EE" quality="high" menu="false" scale="noscale" salign="b" flashvars="" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer/" height="840" width="100%">
+    </object>
+
+    <nav id="nav-overlay" aria-label="Mood Indigo sections">
+      <a data-src="content_c/c0.swf"  title="Competitions"></a>
+      <a data-src="content_h/h0.swf"  title="Hangout"></a>
+      <a data-src="content_i/i0.swf"  title="Informals"></a>
+      <a data-src="content_o/o0.swf"  title="Online"></a>
+      <a data-src="content_p/p0.swf"  title="Participate"></a>
+      <a data-src="content_mi/mi0.swf" title="Mood Indigo"></a>
+    </nav>
+
+    <div id="section-host" aria-live="polite"></div>
+    <button id="section-close" type="button" aria-label="Back to mascot">×</button>
+</div>
+
+<script>
+(() => {
+  const host  = document.getElementById('section-host');
+  const close = document.getElementById('section-close');
+  function loadSection(src) {
+    host.querySelectorAll('ruffle-embed, ruffle-player, embed, object').forEach(n => n.remove());
+    const embed = document.createElement('embed');
+    embed.setAttribute('type', 'application/x-shockwave-flash');
+    embed.setAttribute('src', src);
+    embed.setAttribute('bgcolor', '#e7f2fd');
+    embed.setAttribute('quality', 'high');
+    embed.setAttribute('menu', 'false');
+    embed.setAttribute('wmode', 'transparent');
+    host.appendChild(embed);
+    host.classList.add('active');
+  }
+  document.querySelectorAll('#nav-overlay a').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      loadSection(a.dataset.src);
+    });
+  });
+  // The mascot splash (mi0.swf) was the default landing content of the original site.
+  close.addEventListener('click', () => loadSection('content_mi/mi0.swf'));
+  loadSection('content_mi/mi0.swf');
+})();
+</script>
+<div align="right"><small>Webhosting by:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</small><br />
+<a href="http://www.indialinks.com" target="_blank"><img src="../indialinks_logo.jpg" style="border:0" /></a></div>
+</body>
+</html>

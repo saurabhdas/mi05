@@ -1,0 +1,3 @@
+# Local dev/test artifacts — kept out of the repo
+dev/
+.DS_Store
