@@ -5,14 +5,6 @@
     <title>Mood Indigo 2005: Dive In!</title>
     <link rel="stylesheet" href="main.css" type="text/css" />
     <script>
-      // Run BEFORE ruffle.js — clamp devicePixelRatio so Ruffle's canvas
-      // backing store doesn't get the 2x Retina blowup (4x pixel cost).
-      try {
-        Object.defineProperty(window, 'devicePixelRatio', {
-          get: () => 1, configurable: true
-        });
-      } catch (e) {}
-
       // The schedule SWF (content_mi/schedule.swf) was authored against a 2005
       // Apache box and POSTs to content_mi/day{1..4}.php to fetch its data.
       // Static origins (GitHub Pages, python http.server) reject POST. Patch
