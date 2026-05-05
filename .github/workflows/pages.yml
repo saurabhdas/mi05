@@ -23,8 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Assemble deploy tree (ruffled at root, ruffled2 nested)
+        run: |
+          mkdir -p _deploy
+          cp -R ruffled/. _deploy/
+          cp -R ruffled2 _deploy/ruffled2
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ./ruffled
+          path: ./_deploy
       - id: deployment
         uses: actions/deploy-pages@v4
