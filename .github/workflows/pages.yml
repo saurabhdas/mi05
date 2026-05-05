@@ -1,4 +1,4 @@
-name: Deploy ruffled/ to GitHub Pages
+name: Deploy versioned builds to GitHub Pages
 
 on:
   push:
@@ -23,11 +23,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - name: Assemble deploy tree (ruffled at root, ruffled2 nested)
+      - name: Assemble deploy tree (each ruffled* at its own path; default copied to root)
+        env:
+          # Which version is served at the root URL. Change this one variable
+          # to switch the default; everything else updates automatically.
+          DEFAULT_VERSION: ruffled1
         run: |
           mkdir -p _deploy
-          cp -R ruffled/. _deploy/
-          cp -R ruffled2 _deploy/ruffled2
+          # Each versioned build gets its own namespaced path
+          for v in ruffled*/; do
+            name="${v%/}"
+            cp -R "$v" "_deploy/$name"
+          done
+          # Mount the chosen default at the root as well (no symlinks: Pages
+          # serves files literally and we want each version's relative paths
+          # to resolve identically at /<name>/ and at /).
+          cp -R "$DEFAULT_VERSION/." _deploy/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./_deploy
